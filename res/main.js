@@ -28,7 +28,10 @@ function authFederation(req, res, next) {
 const plugin = {
     name: 'federation',
     async init(api) {
-        const cfg = { ...defaultPluginConfig, ...(api.readPluginConfig() ?? {}) };
+        const cfg = {
+            ...defaultPluginConfig,
+            ...(api.readPluginConfig() ?? {}),
+        };
         if (!cfg.enabled) {
             api.logger.info('[Federation] 联邦功能未启用，跳过加载');
             return;
@@ -61,26 +64,57 @@ const plugin = {
                 if (!nodeId || !nodeUrl) {
                     return res.status(400).json({ error: 'Missing nodeId or nodeUrl' });
                 }
-                const result = instance.handleIncomingHandshake({ nodeId, nodeUrl, serverName: serverName || 'Unknown', instanceId, isReverse: !!isReverse });
+                const result = instance.handleIncomingHandshake({
+                    nodeId,
+                    nodeUrl,
+                    serverName: serverName || 'Unknown',
+                    instanceId,
+                    isReverse: !!isReverse,
+                });
                 return res.json(result);
             });
             app.get('/api/federation/health', authFederation, (_req, res) => {
                 const fm = instance;
                 return res.json({
-                    nodeId: fm.getNodeId(), instanceId: fm.getInstanceId(),
-                    serverName: fm.getConfig().serverName, status: 'online', timestamp: Date.now(),
-                    peers: fm.getNodes().filter((n) => n.status === 'online').map((n) => ({ id: n.id, url: n.url, instanceId: n.instanceId, serverName: n.serverName })),
+                    nodeId: fm.getNodeId(),
+                    instanceId: fm.getInstanceId(),
+                    serverName: fm.getConfig().serverName,
+                    status: 'online',
+                    timestamp: Date.now(),
+                    peers: fm
+                        .getNodes()
+                        .filter((n) => n.status === 'online')
+                        .map((n) => ({
+                        id: n.id,
+                        url: n.url,
+                        instanceId: n.instanceId,
+                        serverName: n.serverName,
+                    })),
                 });
             });
             app.get('/api/federation/peers', authFederation, (_req, res) => {
-                return res.json({ peers: instance.getNodes().map((n) => ({ id: n.id, url: n.url, serverName: n.serverName, status: n.status, lastSeen: n.lastSeen })) });
+                return res.json({
+                    peers: instance.getNodes().map((n) => ({
+                        id: n.id,
+                        url: n.url,
+                        serverName: n.serverName,
+                        status: n.status,
+                        lastSeen: n.lastSeen,
+                    })),
+                });
             });
             app.get('/api/federation/rooms', authFederation, (_req, res) => {
                 return res.json({ rooms: instance.getLocalRoomsForFederation() });
             });
             app.post('/api/federation/proxy/join', authFederation, (req, res) => {
                 const { roomId, userId, userInfo, sourceNodeId, sourceNodeUrl } = req.body;
-                const result = instance.handleIncomingJoin({ roomId, userId, userInfo, sourceNodeId, sourceNodeUrl });
+                const result = instance.handleIncomingJoin({
+                    roomId,
+                    userId,
+                    userInfo,
+                    sourceNodeId,
+                    sourceNodeUrl,
+                });
                 return res.json(result);
             });
             app.post('/api/federation/proxy/leave', authFederation, (req, res) => {
@@ -90,7 +124,12 @@ const plugin = {
             });
             app.post('/api/federation/proxy/command', authFederation, async (req, res) => {
                 const { roomId, userId, command, sourceNodeId } = req.body;
-                const result = await instance.handleIncomingCommand({ roomId, userId, command, sourceNodeId });
+                const result = await instance.handleIncomingCommand({
+                    roomId,
+                    userId,
+                    command,
+                    sourceNodeId,
+                });
                 return res.json(result);
             });
             app.post('/api/federation/proxy/callback', authFederation, (req, res) => {
@@ -109,7 +148,7 @@ const plugin = {
             api.logger.warn('[Federation] Web 服务器未启用，联邦 HTTP 路由不可用');
         }
         // 延迟一帧启动，确保 init 结束后插件已被 PluginManager 登记、HTTP 路由已就绪
-        await new Promise(resolve => setImmediate(resolve));
+        await new Promise((resolve) => setImmediate(resolve));
         await instance.start();
         api.logger.info('[Federation] 联邦插件已启动');
     },

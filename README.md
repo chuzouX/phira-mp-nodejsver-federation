@@ -40,13 +40,13 @@ seedNodes:
   - http://other-server-ip:8080
 
 # 共享密钥，同一网络的所有节点必须一致
-secret: "your-shared-secret"
+secret: 'your-shared-secret'
 
 # 本节点对外访问地址
 nodeUrl: http://your-server-ip:8080
 
 # 节点唯一 ID，留空自动生成
-nodeId: ""
+nodeId: ''
 
 # 健康检查间隔（毫秒）
 healthInterval: 300
@@ -63,18 +63,20 @@ allowLocal: false
 两台服务器 A（10.0.0.1:8080）和 B（10.0.0.2:8080）互连：
 
 **A 的配置：**
+
 ```yaml
 enabled: true
-secret: "my-network-key"
+secret: 'my-network-key'
 nodeUrl: http://10.0.0.1:8080
 seedNodes:
   - http://10.0.0.2:8080
 ```
 
 **B 的配置：**
+
 ```yaml
 enabled: true
-secret: "my-network-key"        # 与 A 一致
+secret: 'my-network-key' # 与 A 一致
 nodeUrl: http://10.0.0.2:8080
 seedNodes:
   - http://10.0.0.1:8080
@@ -92,17 +94,17 @@ seedNodes:
 
 联邦插件自动注册以下路由（通过 `X-Federation-Secret` 头认证）：
 
-| 方法 | 路径 | 用途 |
-|------|------|------|
-| POST | `/api/federation/handshake` | 双向握手 |
-| GET | `/api/federation/health` | 健康检查 |
-| GET | `/api/federation/peers` | 节点列表 |
-| GET | `/api/federation/rooms` | 本地房间列表 |
-| POST | `/api/federation/proxy/join` | 远程玩家加入本地房间 |
-| POST | `/api/federation/proxy/leave` | 远程玩家离开本地房间 |
-| POST | `/api/federation/proxy/command` | 转发命令到权威服务器 |
+| 方法 | 路径                             | 用途                  |
+| ---- | -------------------------------- | --------------------- |
+| POST | `/api/federation/handshake`      | 双向握手              |
+| GET  | `/api/federation/health`         | 健康检查              |
+| GET  | `/api/federation/peers`          | 节点列表              |
+| GET  | `/api/federation/rooms`          | 本地房间列表          |
+| POST | `/api/federation/proxy/join`     | 远程玩家加入本地房间  |
+| POST | `/api/federation/proxy/leave`    | 远程玩家离开本地房间  |
+| POST | `/api/federation/proxy/command`  | 转发命令到权威服务器  |
 | POST | `/api/federation/proxy/callback` | 事件回调（权威→代理） |
-| POST | `/api/federation/event` | 房间事件广播 |
+| POST | `/api/federation/event`          | 房间事件广播          |
 
 ## 许可证
 

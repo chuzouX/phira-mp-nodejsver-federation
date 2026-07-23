@@ -55,17 +55,45 @@ exports.FederationManager = void 0;
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 const ServerCommandType = {
-    Pong: 0, Authenticate: 1, Chat: 2, Touches: 3, Judges: 4,
-    Message: 5, ChangeState: 6, ChangeHost: 7, CreateRoom: 8,
-    JoinRoom: 9, OnJoinRoom: 10, LeaveRoom: 11, LockRoom: 12,
-    CycleRoom: 13, SelectChart: 14, RequestStart: 15, Ready: 16,
-    CancelReady: 17, Played: 18, Abort: 19,
+    Pong: 0,
+    Authenticate: 1,
+    Chat: 2,
+    Touches: 3,
+    Judges: 4,
+    Message: 5,
+    ChangeState: 6,
+    ChangeHost: 7,
+    CreateRoom: 8,
+    JoinRoom: 9,
+    OnJoinRoom: 10,
+    LeaveRoom: 11,
+    LockRoom: 12,
+    CycleRoom: 13,
+    SelectChart: 14,
+    RequestStart: 15,
+    Ready: 16,
+    CancelReady: 17,
+    Played: 18,
+    Abort: 19,
 };
 const ClientCommandType = {
-    Ping: 0, Authenticate: 1, Chat: 2, Touches: 3, Judges: 4,
-    CreateRoom: 5, JoinRoom: 6, LeaveRoom: 7, LockRoom: 8,
-    CycleRoom: 9, SelectChart: 10, RequestStart: 11, Ready: 12,
-    CancelReady: 13, Played: 14, Abort: 15, GameResult: 16,
+    Ping: 0,
+    Authenticate: 1,
+    Chat: 2,
+    Touches: 3,
+    Judges: 4,
+    CreateRoom: 5,
+    JoinRoom: 6,
+    LeaveRoom: 7,
+    LockRoom: 8,
+    CycleRoom: 9,
+    SelectChart: 10,
+    RequestStart: 11,
+    Ready: 12,
+    CancelReady: 13,
+    Played: 14,
+    Abort: 15,
+    GameResult: 16,
 };
 // ====================== 联邦管理器 ======================
 class FederationManager {
@@ -110,7 +138,7 @@ class FederationManager {
         // 从种子节点发现网络
         await this.discoverFromSeeds();
         // 尝试重连缓存中的所有节点（种子节点之外的）
-        const seedUrls = new Set(this.config.seedNodes.map(s => s.trim()));
+        const seedUrls = new Set(this.config.seedNodes.map((s) => s.trim()));
         for (const node of this.nodes.values()) {
             if (!seedUrls.has(node.url) && node.status !== 'online') {
                 this.handshakeWithNode(node.url).catch(() => { });
@@ -143,7 +171,9 @@ class FederationManager {
                 return fs.readFileSync(this.nodeIdFile, 'utf8').trim();
             }
         }
-        catch { /* 忽略 */ }
+        catch {
+            /* 忽略 */
+        }
         const id = `node_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
         try {
             const dir = path.dirname(this.nodeIdFile);
@@ -156,10 +186,18 @@ class FederationManager {
         }
         return id;
     }
-    getNodeId() { return this.config.nodeId; }
-    getNodeUrl() { return this.config.nodeUrl; }
-    getInstanceId() { return this.instanceId; }
-    getConfig() { return this.config; }
+    getNodeId() {
+        return this.config.nodeId;
+    }
+    getNodeUrl() {
+        return this.config.nodeUrl;
+    }
+    getInstanceId() {
+        return this.instanceId;
+    }
+    getConfig() {
+        return this.config;
+    }
     // ==================== 节点发现 ====================
     async discoverFromSeeds() {
         for (const seedUrl of this.config.seedNodes) {
@@ -197,11 +235,14 @@ class FederationManager {
                 this.logger.warn(`[联邦] ⮕ 握手失败 ${nodeUrl}: HTTP ${response.status} - ${body}`);
                 return false;
             }
-            const data = await response.json();
+            const data = (await response.json());
             this.logger.info(`[联邦] ⮕ 握手响应: 对方节点 ${data.serverName} (ID: ${data.nodeId}, 实例: ${data.instanceId}), 返回了 ${data.peers?.length ?? 0} 个peers`);
             // 检查实例变化：如果 ID 相同但 instanceId 变了，说明对方重启了
             const existing = this.nodes.get(data.nodeId);
-            if (existing && existing.instanceId && data.instanceId && existing.instanceId !== data.instanceId) {
+            if (existing &&
+                existing.instanceId &&
+                data.instanceId &&
+                existing.instanceId !== data.instanceId) {
                 this.logger.warn(`[联邦] ⮕ 检测到节点 ${data.serverName} 重启 (实例ID从 ${existing.instanceId} 变为 ${data.instanceId})，清理旧会话`);
                 this.handleNodeOffline(data.nodeId);
             }
@@ -220,7 +261,7 @@ class FederationManager {
                 for (const peer of data.peers) {
                     if (peer.id !== this.config.nodeId && !this.nodes.has(peer.id)) {
                         this.logger.info(`[联邦] ⮕ 从 ${data.serverName} 发现新节点: ${peer.serverName} (${peer.url})`);
-                        this.handshakeWithNode(peer.url).catch(err => {
+                        this.handshakeWithNode(peer.url).catch((err) => {
                             this.logger.warn(`[联邦] 无法连接新发现的节点 ${peer.url}: ${err instanceof Error ? err.message : String(err)}`);
                         });
                     }
@@ -273,7 +314,7 @@ class FederationManager {
         // ★ 核心：收到握手后，异步反向握手+立即同步该节点的房间
         if (isNew && !isReverse) {
             this.logger.info(`[联邦] ⬅ 新节点首次连接，触发反向握手: ${serverName} (${nodeUrl})`);
-            this.reverseHandshake(nodeUrl, nodeId).catch(err => {
+            this.reverseHandshake(nodeUrl, nodeId).catch((err) => {
                 this.logger.error(`[联邦] ⬅ 反向握手失败 ${nodeUrl}: ${err instanceof Error ? err.message : String(err)}`);
             });
         }
@@ -287,7 +328,7 @@ class FederationManager {
         const nodeRef = this.nodes.get(nodeId);
         if (nodeRef) {
             this.logger.info(`[联邦] ⬅ 正在从 ${serverName} (${nodeUrl}) 拉取房间列表...`);
-            this.syncRoomsFromNode(nodeRef).catch(err => {
+            this.syncRoomsFromNode(nodeRef).catch((err) => {
                 this.logger.error(`[联邦] ⬅ 从 ${serverName} 同步房间失败: ${err instanceof Error ? err.message : String(err)}`);
             });
         }
@@ -300,7 +341,7 @@ class FederationManager {
             nodeId: this.config.nodeId,
             instanceId: this.instanceId,
             serverName: this.config.serverName,
-            peers: myPeers.map(n => ({
+            peers: myPeers.map((n) => ({
                 id: n.id,
                 url: n.url,
                 serverName: n.serverName,
@@ -335,11 +376,14 @@ class FederationManager {
                 this.logger.error(`[联邦] ↩ 反向握手HTTP失败 ${nodeUrl}: ${response.status} - ${body}`);
                 return;
             }
-            const data = await response.json();
+            const data = (await response.json());
             this.logger.info(`[联邦] ↩ 反向握手成功: 对方 ${data.serverName} (ID: ${data.nodeId}, 实例: ${data.instanceId}), ${data.peers?.length ?? 0} peers`);
             // 检查实例变化
             const existing = this.nodes.get(knownNodeId);
-            if (existing && existing.instanceId && data.instanceId && existing.instanceId !== data.instanceId) {
+            if (existing &&
+                existing.instanceId &&
+                data.instanceId &&
+                existing.instanceId !== data.instanceId) {
                 this.logger.warn(`[联邦] ↩ 检测到节点 ${data.serverName} 重启 (实例ID从 ${existing.instanceId} 变为 ${data.instanceId})，清理旧会话`);
                 this.handleNodeOffline(knownNodeId);
             }
@@ -358,7 +402,7 @@ class FederationManager {
                 for (const peer of data.peers) {
                     if (peer.id !== this.config.nodeId && !this.nodes.has(peer.id)) {
                         this.logger.info(`[联邦] ↩ 从反向握手发现新节点: ${peer.serverName} (${peer.url})`);
-                        this.handshakeWithNode(peer.url).catch(err => {
+                        this.handshakeWithNode(peer.url).catch((err) => {
                             this.logger.warn(`[联邦] 连接新发现节点失败 ${peer.url}: ${err instanceof Error ? err.message : String(err)}`);
                         });
                     }
@@ -391,7 +435,7 @@ class FederationManager {
                 this.logger.error(`[联邦] 📥 拉取房间失败 ${node.serverName} (${node.url}): HTTP ${response.status} - ${body}`);
                 return;
             }
-            const data = await response.json();
+            const data = (await response.json());
             if (data.rooms && Array.isArray(data.rooms)) {
                 let count = 0;
                 for (const room of data.rooms) {
@@ -461,12 +505,12 @@ class FederationManager {
         return Array.from(this.nodes.values());
     }
     getOnlineNodes() {
-        return this.getNodes().filter(n => n.status === 'online');
+        return this.getNodes().filter((n) => n.status === 'online');
     }
     // ==================== 健康检查 ====================
     startHealthChecks() {
         this.healthTimer = setInterval(() => {
-            this.checkAllNodes().catch(err => {
+            this.checkAllNodes().catch((err) => {
                 this.logger.error(`[联邦] 健康检查循环出错: ${err}`);
             });
         }, this.config.healthInterval);
@@ -515,7 +559,7 @@ class FederationManager {
             this.removeNode(nodeId);
         }
         // 执行健康检查并更新 lastHealthCheck
-        const promises = nodesToCheck.map(node => {
+        const promises = nodesToCheck.map((node) => {
             node.lastHealthCheck = now;
             return this.checkNode(node);
         });
@@ -530,14 +574,14 @@ class FederationManager {
                 signal: AbortSignal.timeout(8000),
             });
             if (response.ok) {
-                const data = await response.json();
+                const data = (await response.json());
                 node.lastSeen = Date.now();
                 node.status = 'online';
                 node.serverName = data.serverName || node.serverName;
                 // 节点恢复上线时立即同步房间
                 if (wasPreviouslyOffline) {
                     this.logger.info(`[联邦] 节点恢复上线: ${node.serverName} (${node.url})，正在同步房间...`);
-                    this.syncRoomsFromNode(node).catch(err => {
+                    this.syncRoomsFromNode(node).catch((err) => {
                         this.logger.error(`[联邦] 恢复上线同步房间失败 ${node.serverName}: ${err instanceof Error ? err.message : String(err)}`);
                     });
                 }
@@ -603,7 +647,7 @@ class FederationManager {
     // ==================== 房间同步 ====================
     startRoomSync() {
         this.syncTimer = setInterval(() => {
-            this.syncAllRooms().catch(err => {
+            this.syncAllRooms().catch((err) => {
                 this.logger.error(`[联邦] 房间同步循环出错: ${err}`);
             });
         }, this.config.syncInterval);
@@ -630,7 +674,7 @@ class FederationManager {
                     }
                     return;
                 }
-                const data = await response.json();
+                const data = (await response.json());
                 if (data.rooms && Array.isArray(data.rooms)) {
                     for (const room of data.rooms) {
                         newRemoteRooms.set(room.id, {
@@ -702,7 +746,7 @@ class FederationManager {
                 }),
                 signal: AbortSignal.timeout(15000),
             });
-            const data = await response.json();
+            const data = (await response.json());
             if (data.success) {
                 // 标记为代理玩家
                 this.proxyPlayers.set(userId, {
@@ -764,8 +808,9 @@ class FederationManager {
                 }),
                 signal: AbortSignal.timeout(30000),
             });
-            const data = await response.json();
-            if (data.success === false && (data.error === '联邦玩家未找到' || data.error === '联邦会话未找到')) {
+            const data = (await response.json());
+            if (data.success === false &&
+                (data.error === '联邦玩家未找到' || data.error === '联邦会话未找到')) {
                 this.logger.warn(`[联邦] 远程服务器已丢失玩家 ${userId} 的会话，强制本地退出`);
                 this.proxyPlayers.delete(userId);
                 sendResponse({
@@ -842,7 +887,7 @@ class FederationManager {
         // 在 ProtocolHandler 上创建联邦会话
         if (this.protocolHandler) {
             const callbackFn = (cmd) => {
-                this.sendEventCallback(sourceNodeUrl, userId, cmd).catch(err => {
+                this.sendEventCallback(sourceNodeUrl, userId, cmd).catch((err) => {
                     this.logger.error(`[联邦] 发送事件回调失败 (userId: ${userId}): ${err instanceof Error ? err.message : String(err)}`);
                 });
             };
@@ -875,7 +920,7 @@ class FederationManager {
             });
         }
         // 构建加入响应
-        const usersInRoom = Array.from(room.players.values()).map(p => p.user);
+        const usersInRoom = Array.from(room.players.values()).map((p) => p.user);
         const serverUser = {
             id: -1,
             name: this.config.serverName,
@@ -905,8 +950,7 @@ class FederationManager {
         if (!this.protocolHandler)
             return { success: false, error: '协议处理器不可用' };
         // 判断是否为异步命令（SelectChart/Played 需要远程获取数据）
-        const isAsync = command.type === ClientCommandType.SelectChart ||
-            command.type === ClientCommandType.Played;
+        const isAsync = command.type === ClientCommandType.SelectChart || command.type === ClientCommandType.Played;
         if (!isAsync) {
             // 同步命令：直接捕获响应
             const responses = [];
@@ -1022,7 +1066,7 @@ class FederationManager {
             this.logger.debug(`[联邦] 📡 无在线节点，跳过广播事件 ${eventType} (房间: ${roomId})`);
             return;
         }
-        this.logger.info(`[联邦] 📡 广播事件 ${eventType} (房间: ${roomId}) → ${onlineNodes.length} 个节点: [${onlineNodes.map(n => n.serverName).join(', ')}]`);
+        this.logger.info(`[联邦] 📡 广播事件 ${eventType} (房间: ${roomId}) → ${onlineNodes.length} 个节点: [${onlineNodes.map((n) => n.serverName).join(', ')}]`);
         const event = {
             type: eventType,
             sourceNodeId: this.config.nodeId,
@@ -1147,7 +1191,7 @@ class FederationManager {
     }
     /** 获取本地所有房间的联邦信息 */
     getLocalRoomsForFederation() {
-        return this.roomManager.listRooms().map(room => this.buildLocalRoomInfo(room));
+        return this.roomManager.listRooms().map((room) => this.buildLocalRoomInfo(room));
     }
     // ==================== 持久化 ====================
     saveNodes() {
@@ -1155,7 +1199,7 @@ class FederationManager {
             const dir = path.dirname(this.nodesFile);
             if (!fs.existsSync(dir))
                 fs.mkdirSync(dir, { recursive: true });
-            const data = Array.from(this.nodes.values()).map(n => ({
+            const data = Array.from(this.nodes.values()).map((n) => ({
                 id: n.id,
                 url: n.url,
                 serverName: n.serverName,
@@ -1198,7 +1242,7 @@ class FederationManager {
             instanceId: this.instanceId,
             nodeUrl: this.config.nodeUrl,
             serverName: this.config.serverName,
-            nodes: this.getNodes().map(n => ({
+            nodes: this.getNodes().map((n) => ({
                 id: n.id,
                 url: n.url,
                 instanceId: n.instanceId,

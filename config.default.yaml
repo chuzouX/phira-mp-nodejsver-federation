@@ -1,8 +1,8 @@
 enabled: false
 seedNodes: []
-secret: ""
-nodeId: ""
-nodeUrl: ""
+secret: ''
+nodeId: ''
+nodeUrl: ''
 healthInterval: 300
 syncInterval: 150
 allowLocal: false
