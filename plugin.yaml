@@ -1,7 +1,7 @@
 id: federation
 uuid: 52240ded-88f7-4b21-bb41-9546613601e5
 name: Federation
-version: 1.0.0
+version: 1.0.1
 description: 对等联邦节点管理，实现多服务器无中心化联机
 author: Phira NodejsVer MP Server Team
 license: MIT
